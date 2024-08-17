@@ -35,8 +35,6 @@ async function run() {
 
 
 
-
-
         app.get('/productsCount', async (req, res) => {
             const count = await productCollection.estimatedDocumentCount();
             res.send({ count });
@@ -55,6 +53,15 @@ async function run() {
                 size = 8,
             } = req.query;
 
+            // const query = {
+            //     ...(q && { productName: { $regex: q, $options: "i" } }),
+            //     ...(brand && { brandName: brand }),
+            //     ...(category && { categoryName: category }),
+            //   
+            //     }),
+            // };
+
+
             const query = {
                 ...(q && { productName: { $regex: q, $options: "i" } }),
                 ...(brand && { brandName: brand }),
@@ -68,6 +75,7 @@ async function run() {
             const sortOptions = {
                 ...(sortBy === "priceLowHigh" && { price: 1 }),
                 ...(sortBy === "priceHighLow" && { price: -1 }),
+                // ...(sortBy === "dateAdded" && { dateAdded: -1 }),
                 ...(sortBy === "dateAdded" && { dateAdded: -1 }),
             };
 
