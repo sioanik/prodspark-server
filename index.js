@@ -10,8 +10,8 @@ app.use(cors({
     origin: ["http://localhost:5173"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-  }));
-  app.use(express.json());
+}));
+app.use(express.json());
 
 
 // mongodb 
@@ -20,64 +20,83 @@ const uri = "mongodb+srv://${process.env.DATABASE_USER}:${process.env.DATABASE_K
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    }
 });
 
 async function run() {
-  try {
+    try {
 
-    const database = client.db("ProdsSarkDB");
-    const productCollection = database.collection("products");
-
-
-
-
-    
-    app.get('/productsCount', async (req, res) => {
-        const count = await productCollection.estimatedDocumentCount();
-        res.send({count});
-      })
-  
-      // get products data
-      app.get("/products", async(req, res) => {
-        const searchQuery = req.query.q || "";
-        const query = {
-          productName: { $regex: searchQuery, $options: "i" }
-        };
-  
-        const page = parseInt(req.query.page) || 0;
-        const size = parseInt(req.query.size) || 8;
-  
-        const cursor = productCollection.find(query).skip(page * size).limit(size);
-        const result = await cursor.toArray();
-              
-        res.send(result);
-      })
+        const database = client.db("ProdsSarkDB");
+        const productCollection = database.collection("products");
 
 
 
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
-    // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
+
+
+        app.get('/productsCount', async (req, res) => {
+            const count = await productCollection.estimatedDocumentCount();
+            res.send({ count });
+        })
+
+        // get products data
+        app.get("/products", async (req, res) => {
+            const {
+                q,
+                brand,
+                category,
+                minPrice,
+                maxPrice,
+                sortBy,
+                page = 0,
+                size = 8,
+            } = req.query;
+
+            const query = {
+                ...(q && { productName: { $regex: q, $options: "i" } }),
+                ...(brand && { brandName: brand }),
+                ...(category && { categoryName: category }),
+                ...(minPrice &&
+                    maxPrice && {
+                    price: { $gte: parseFloat(minPrice), $lte: parseFloat(maxPrice) },
+                }),
+            };
+
+            const sortOptions = {
+                ...(sortBy === "priceLowHigh" && { price: 1 }),
+                ...(sortBy === "priceHighLow" && { price: -1 }),
+                ...(sortBy === "dateAdded" && { dateAdded: -1 }),
+            };
+
+            const cursor = productCollection.find(query).sort(sortOptions).skip(page * size).limit(parseInt(size));
+            const result = await cursor.toArray();
+
+            res.send(result);
+        })
+
+
+        // commented
+        // Connect the client to the server	(optional starting in v4.7)
+        // await client.connect();
+        // Send a ping to confirm a successful connection
+        // await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    } finally {
+        // Ensures that the client will close when you finish/error
+        // await client.close();
+    }
 }
 run().catch(console.dir);
 
 
 
 app.get('/', (req, res) => {
-  res.send('Hello World!')
+    res.send('Hello World!')
 })
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
+    console.log(`Example app listening on port ${port}`)
 })
