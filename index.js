@@ -7,7 +7,7 @@ const port = process.env.PORT || 5000
 
 // middlewares
 app.use(cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "https://project-prodspark.web.app", "https://project-prodspark.firebaseapp.com"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 }));
