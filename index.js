@@ -33,8 +33,11 @@ async function run() {
         const database = client.db("ProdsSarkDB");
         const productCollection = database.collection("products");
 
+        app.get("/productsCount", async (req, res) => {
+            const count = await productCollection.estimatedDocumentCount();
+            res.send({ count });
+          });
 
-        
 
         app.get("/products", async (req, res) => {
             const {
@@ -54,6 +57,7 @@ async function run() {
               ...(category && { category: category }),
               ...(minPrice && { price: { $gte: parseFloat(minPrice) } }),
               ...(maxPrice && { price: { $lte: parseFloat(maxPrice) } }),
+            //   ...(maxPrice && { price: { $lte: parseFloat(maxPrice) } }),
             };
       
             const sortOptions = {
