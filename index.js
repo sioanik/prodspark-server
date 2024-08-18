@@ -5,7 +5,7 @@ const cors = require('cors')
 const port = process.env.PORT || 5000
 
 
-// middleware
+// middlewares
 app.use(cors({
     origin: ["http://localhost:5173"],
     credentials: true,
