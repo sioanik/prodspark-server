@@ -16,8 +16,8 @@ app.use(express.json());
 
 // mongodb 
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://${process.env.DATABASE_USER}:${process.env.DATABASE_KEY}@cluster0.cczhmev.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-
+const uri = `mongodb+srv://${process.env.DATABASE_USER}:${process.env.DATABASE_KEY}@cluster0.cczhmev.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+console.log(uri);
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
     serverApi: {
@@ -34,56 +34,43 @@ async function run() {
         const productCollection = database.collection("products");
 
 
+        
 
-        app.get('/productsCount', async (req, res) => {
-            const count = await productCollection.estimatedDocumentCount();
-            res.send({ count });
-        })
-
-        // get products data
         app.get("/products", async (req, res) => {
             const {
-                q,
-                brand,
-                category,
-                minPrice,
-                maxPrice,
-                sortBy,
-                page = 0,
-                size = 8,
+              q,
+              brand,
+              category,
+              minPrice,
+              maxPrice,
+              sortBy,
+              page = 0,
+              size = 8,
             } = req.query;
-
-            // const query = {
-            //     ...(q && { productName: { $regex: q, $options: "i" } }),
-            //     ...(brand && { brandName: brand }),
-            //     ...(category && { categoryName: category }),
-            //   
-            //     }),
-            // };
-
-
+      
             const query = {
-                ...(q && { productName: { $regex: q, $options: "i" } }),
-                ...(brand && { brandName: brand }),
-                ...(category && { categoryName: category }),
-                ...(minPrice &&
-                    maxPrice && {
-                    price: { $gte: parseFloat(minPrice), $lte: parseFloat(maxPrice) },
-                }),
+              ...(q && { productName: { $regex: q, $options: "i" } }),
+              ...(brand && { brandName: brand }),
+              ...(category && { category: category }),
+              ...(minPrice && { price: { $gte: parseFloat(minPrice) } }),
+              ...(maxPrice && { price: { $lte: parseFloat(maxPrice) } }),
             };
-
+      
             const sortOptions = {
-                ...(sortBy === "priceLowHigh" && { price: 1 }),
-                ...(sortBy === "priceHighLow" && { price: -1 }),
-                // ...(sortBy === "dateAdded" && { dateAdded: -1 }),
-                ...(sortBy === "dateAdded" && { dateAdded: -1 }),
+              ...(sortBy === "priceLowHigh" && { price: 1 }),
+              ...(sortBy === "priceHighLow" && { price: -1 }),
+              ...(sortBy === "dateAdded" && { dateAdded: -1 }),
             };
-
+            // const sortOptions = {
+            //   ...(sortBy === "priceHighLow" && { price: -1 }),
+            //   ...(sortBy === "dateAdded" && { dateAdded: -1 }),
+            // };
+      
             const cursor = productCollection.find(query).sort(sortOptions).skip(page * size).limit(parseInt(size));
             const result = await cursor.toArray();
-
+      
             res.send(result);
-        })
+          });
 
 
         // commented
